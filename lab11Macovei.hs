@@ -1,6 +1,7 @@
 -- Semigrup (M,<>), <> e asociativa
 -- Monoid (M,<>,mempty) (M,<>) semigrup , mempty elem neutru la st si dr
-
+import Data.List
+import Data.Char
 import Test.QuickCheck
 import Test.QuickCheck.Gen
 
@@ -40,7 +41,7 @@ test_trivial_mr = quickCheck (monoidRightIdentity:: TrivialIdentity)
 -- conjuctii
 
 newtype BoolConj = BoolConj Bool 
-    deriving (Eq,Show)
+    deriving (Eq)
 
 instance Semigroup BoolConj where
     (BoolConj x) <> (BoolConj y) = BoolConj (x && y)
@@ -54,6 +55,8 @@ instance Arbitrary BoolConj where
 type BoolConjAssoc = BoolConj->BoolConj->BoolConj->Bool 
 type BoolConjIdentity = BoolConj->Bool 
 
+instance Show BoolConj where
+    show (BoolConj x) = show x
 
 --ex 3
 
@@ -119,3 +122,32 @@ instance (Arbitrary a,Arbitrary b ) => Arbitrary  (Or a b) where
                 arbitrarySnd = Snd <$> arbitrary 
 
 
+-- ex pervers
+
+newtype Obiect a = Obiect [a]
+
+instance (Semigroup a) => Semigroup (Obiect a) where
+    Obiect a <> Obiect b = Obiect (a++b)
+
+instance (Monoid a)=> Monoid (Obiect a) where
+    mempty = Obiect mempty 
+
+ob1 = Obiect [3,2,1]
+ob2 = Obiect [4,5,6]
+ob3 = Obiect ["penis","ciocan","marian"]
+
+instance (Show a,Ord a)=> Show (Obiect a) where
+    show (Obiect l) = show (sort l)
+
+instance (Ord a,Eq a)=> Eq (Obiect a) where
+    Obiect a == Obiect b = and [c==d | c<-(sort (a)) ,d<- (sort(b))]
+
+
+
+instance Functor Obiect where
+    fmap f (Obiect l) = Obiect (map f l)
+
+instance Foldable Obiect where
+   foldMap f (Obiect l)
+    | null l = mempty
+    | otherwise = f (head l) `mappend` foldMap f (Obiect $ tail l)
